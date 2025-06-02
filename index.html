@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go Smart Academy</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #fff, #f3e9dd);
+      color: #3e2d14;
+      overflow-x: hidden;
+    }
+    * { text-shadow: 0 0 3px gold; }
+    header {
+      background-color: #3e2d14;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      position: relative;
+    }
+    .nav { display: flex; gap: 15px; }
+    .nav button {
+      background: gold;
+      color: #3e2d14;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .nav button:hover { background: #fff3b0; }
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      color: #3e2d14;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      max-width: 300px;
+      z-index: 10;
+    }
+    .show { display: block; }
+    #adminIcon {
+      cursor: pointer;
+      background: gold;
+      color: #3e2d14;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .ticker {
+      background: gold;
+      color: #3e2d14;
+      padding: 10px;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .main { text-align: center; padding: 30px 10px; }
+    .site-title {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #8b4513;
+      text-shadow: 0 0 10px #b8860b;
+      margin: 30px 0;
+    }
+    .slide {
+      margin-bottom: 20px;
+    }
+    .slide img {
+      max-width: 90%;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .slide p {
+      font-size: 1.5em;
+      color: #3e2d14;
+      margin: 10px 0;
+    }
+    .send-message, .logout {
+      margin: 10px;
+      background: #fff3b0;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #3e2d14;
+      color: white;
+    }
+    .hidden { display: none; }
+    textarea, input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      margin: 10px auto;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body onclick="hideDropdowns(event)">
+  <header>
+    <div class="nav">
+      <button onclick="toggleDropdown('about')">من نحن</button>
+      <button onclick="toggleDropdown('contact')">اتصل بنا</button>
+      <button onclick="toggleMessageForm()">أرسل رسالة</button>
+    </div>
+    <div id="adminIcon" onclick="toggleAdminLogin()">دخول الأدمن</div>
+    <div id="about" class="dropdown">نص من نحن</div>
+    <div id="contact" class="dropdown">نص اتصل بنا</div>
+  </header>
+  <div class="ticker" id="announcement">إعلان</div>
+  <div class="main">
+    <div class="site-title">GO SMART AMERICAN ACADEMY</div>
+    <div id="messageForm" class="hidden">
+      <textarea id="messageInput" placeholder="اكتب رسالتك هنا..."></textarea><br>
+      <button onclick="sendMessage()">إرسال</button>
+      <p id="messageStatus"></p>
+    </div>
+  </div>
+  <div class="main" id="mainContent"></div>
+  <div class="main hidden" id="adminPanel">
+    <h3>لوحة تحكم الأدمن</h3>
+    <input type="file" id="imageUpload" multiple><br>
+    <textarea id="slideText" placeholder="اكتب النص المصاحب للصورة"></textarea><br>
+    <button onclick="addSlide()">إضافة صورة مع نص</button><br>
+    <textarea id="editAbout" placeholder="تعديل نص من نحن"></textarea><br>
+    <button onclick="updateText('about')">تحديث من نحن</button><br>
+    <textarea id="editContact" placeholder="تعديل نص اتصل بنا"></textarea><br>
+    <button onclick="updateText('contact')">تحديث اتصل بنا</button><br>
+    <textarea id="editAnnouncement" placeholder="تعديل الإعلان النصي"></textarea><br>
+    <button onclick="updateAnnouncement()">تحديث الإعلان</button><br>
+    <h3>الرسائل الواردة</h3>
+    <div id="adminMessages"></div>
+    <h3>المنشورات المضافة</h3>
+    <div id="adminSlides"></div>
+    <button class="logout" onclick="logout()">تسجيل الخروج</button>
+  </div>
+  <footer>
+    جميع حقوق التصميم محفوظة لـ SFW للتسويق الإلكتروني © 2025
+  </footer>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0FrVKthOv8a1b7sTaEtTWNp5iaNW24Bw",
+      authDomain: "gosmartacademysuez-a51ef.firebaseapp.com",
+      projectId: "gosmartacademysuez-a51ef",
+      storageBucket: "gosmartacademysuez-a51ef.firebasestorage.app",
+      messagingSenderId: "182675251189",
+      appId: "1:182675251189:web:d8842f962fd7a9d4748abc",
+      measurementId: "G-P9JEFYDPF6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let isAdmin = false;
+
+    function toggleAdminLogin() {
+      const password = prompt("من فضلك أدخل كلمة السر:");
+      if (password === "admin123") {
+        isAdmin = true;
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('mainContent').classList.add('hidden');
+        document.getElementById('messageForm').classList.add('hidden');
+        fetchAllData();
+      } else {
+        alert("كلمة السر غير صحيحة!");
+      }
+    }
+
+    function logout() {
+      isAdmin = false;
+      document.getElementById('adminPanel').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    function hideDropdowns(e) {
+      if (!e.target.closest('.nav') && !e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('show'));
+      }
+    }
+
+    function toggleDropdown(id) {
+      document.getElementById(id).classList.toggle('show');
+    }
+
+    function toggleMessageForm() {
+      document.getElementById('messageForm').classList.toggle('hidden');
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById('messageInput').value;
+      if (msg.trim()) {
+        db.ref('messages').push().set(msg);
+        document.getElementById('messageStatus').innerText = 'تم إرسال رسالتك بنجاح.';
+        document.getElementById('messageInput').value = '';
+      }
+    }
+
+    function deleteMessage(key) {
+      db.ref('messages/' + key).remove();
+    }
+
+    function renderMessages(messages) {
+      const box = document.getElementById('adminMessages');
+      box.innerHTML = '';
+      for (const key in messages) {
+        const msg = messages[key];
+        box.innerHTML += `<p>${msg}</p><button onclick="deleteMessage('${key}')">حذف</button>`;
+      }
+    }
+
+    function renderSlides(slides) {
+      const main = document.getElementById('mainContent');
+      const admin = document.getElementById('adminSlides');
+      main.innerHTML = '';
+      admin.innerHTML = '';
+      for (const key in slides) {
+        const slide = slides[key];
+        main.innerHTML += `<div class='slide'><p>${slide.text}</p><img src='${slide.img}' alt='صورة'></div>`;
+        if (isAdmin) {
+          admin.innerHTML += `<div class='slide'><p>${slide.text}</p><img src='${slide.img}' alt='صورة'><br><button onclick="editSlide('${key}', '${slide.text}')">تعديل</button><button onclick="deleteSlide('${key}')">حذف</button></div>`;
+        }
+      }
+    }
+
+    function addSlide() {
+      const files = document.getElementById('imageUpload').files;
+      const text = document.getElementById('slideText').value;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          db.ref('slides').push().set({ text, img: e.target.result });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function deleteSlide(key) {
+      db.ref('slides/' + key).remove();
+    }
+
+    function editSlide(key, currentText) {
+      const newText = prompt("أدخل النص الجديد:", currentText);
+      if (newText !== null) {
+        db.ref('slides/' + key + '/text').set(newText);
+      }
+    }
+
+    function updateText(type) {
+      const val = document.getElementById('edit' + type.charAt(0).toUpperCase() + type.slice(1)).value;
+      document.getElementById(type).innerText = val;
+      db.ref(type + 'Text').set(val);
+    }
+
+    function updateAnnouncement() {
+      const val = document.getElementById('editAnnouncement').value;
+      document.getElementById('announcement').innerText = val;
+      db.ref('announcementText').set(val);
+    }
+
+    function fetchAllData() {
+      db.ref().on('value', snapshot => {
+        const data = snapshot.val() || {};
+        document.getElementById('about').innerText = data.aboutText || '';
+        document.getElementById('contact').innerText = data.contactText || '';
+        document.getElementById('announcement').innerText = data.announcementText || '';
+        renderSlides(data.slides || {});
+        renderMessages(data.messages || {});
+      });
+    }
+
+    window.onload = fetchAllData;
+  </script>
+</body>
+</html>
