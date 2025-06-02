@@ -14,7 +14,9 @@
       color: #3e2d14;
       overflow-x: hidden;
     }
-    * { text-shadow: 0 0 3px gold; }
+    body, h1, h2, h3, p, button, textarea, input {
+      text-shadow: 0 0 5px gold;
+    }
     header {
       background-color: #3e2d14;
       color: white;
@@ -71,7 +73,6 @@
       font-size: 2.5em;
       font-weight: bold;
       color: #8b4513;
-      text-shadow: 0 0 10px #b8860b;
       margin: 30px 0;
     }
     #logoImg {
@@ -88,9 +89,18 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .slide p {
-      font-size: 1.5em;
+      font-size: 1.2em;
       color: #3e2d14;
-      margin: 10px 0;
+      margin: 10px auto;
+      width: 90%;
+      text-align: justify;
+    }
+    .read-more {
+      color: #007bff;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: inline-block;
+      margin-top: 5px;
     }
     .send-message, .logout {
       margin: 10px;
@@ -163,6 +173,7 @@
     <div id="adminSlides"></div>
     <button class="logout" onclick="logout()">تسجيل الخروج</button>
   </div>
+
   <footer>
     جميع حقوق التصميم محفوظة لـ SFW للتسويق الإلكتروني © 2025
   </footer>
@@ -172,7 +183,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyA0FrVKthOv8a1b7sTaEtTWNp5iaNW24Bw",
   authDomain: "gosmartacademysuez-a51ef.firebaseapp.com",
   projectId: "gosmartacademysuez-a51ef",
-  storageBucket: "gosmartacademysuez-a51ef.firebasestorage.app",
+  storageBucket: "gosmartacademysuez-a51ef.appspot.com",
   messagingSenderId: "182675251189",
   appId: "1:182675251189:web:d8842f962fd7a9d4748abc",
   measurementId: "G-P9JEFYDPF6"
@@ -242,12 +253,49 @@ function renderSlides(slides) {
   const admin = document.getElementById('adminSlides');
   main.innerHTML = '';
   admin.innerHTML = '';
-  for (const key in slides) {
+  const keys = Object.keys(slides).reverse();
+  for (const key of keys) {
     const slide = slides[key];
-    main.innerHTML += `<div class='slide'><p>${slide.text}</p><img src='${slide.img}' alt='صورة'></div>`;
+    const words = slide.text.trim().split(/\s+/);
+    const shortText = words.slice(0, 20).join(" ");
+    const isLong = words.length > 20;
+    const mainSlide = document.createElement('div');
+    mainSlide.className = 'slide';
+    mainSlide.innerHTML = `
+      <p>
+        <span class="short-text">${shortText}${isLong ? '...' : ''}</span>
+        <span class="full-text hidden">${slide.text}</span>
+        ${isLong ? '<span class="read-more" onclick="toggleText(this)">قراءة المزيد</span>' : ''}
+      </p>
+      <img src='${slide.img}' alt='صورة'>
+    `;
+    main.appendChild(mainSlide);
     if (isAdmin) {
-      admin.innerHTML += `<div class='slide'><p>${slide.text}</p><img src='${slide.img}' alt='صورة'><br><button onclick="editSlide('${key}', '${slide.text}')">تعديل</button><button onclick="deleteSlide('${key}')">حذف</button></div>`;
+      const adminSlide = document.createElement('div');
+      adminSlide.className = 'slide';
+      adminSlide.innerHTML = `
+        <p>${slide.text}</p>
+        <img src='${slide.img}' alt='صورة'><br>
+        <button onclick="editSlide('${key}', \`${slide.text.replace(/`/g, '\\`')}\`)">تعديل</button>
+        <button onclick="deleteSlide('${key}')">حذف</button>
+      `;
+      admin.appendChild(adminSlide);
     }
+  }
+}
+
+function toggleText(elem) {
+  const parent = elem.parentElement;
+  const shortText = parent.querySelector('.short-text');
+  const fullText = parent.querySelector('.full-text');
+  if (fullText.classList.contains('hidden')) {
+    fullText.classList.remove('hidden');
+    shortText.classList.add('hidden');
+    elem.innerText = 'عرض أقل';
+  } else {
+    fullText.classList.add('hidden');
+    shortText.classList.remove('hidden');
+    elem.innerText = 'قراءة المزيد';
   }
 }
 
