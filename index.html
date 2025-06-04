@@ -13,9 +13,19 @@
       background: linear-gradient(to bottom, #fff, #f3e9dd);
       color: #3e2d14;
       overflow-x: hidden;
+      scroll-behavior: smooth; /* إضافة تأثير التمرير البطيء */
     }
     body, h1, h2, h3, p, button, textarea, input {
       text-shadow: 0 0 5px gold;
+      animation: glow 2s infinite alternate; /* تأثير التوهج للخطوط */
+    }
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px gold;
+      }
+      to {
+        text-shadow: 0 0 10px gold, 0 0 15px #ffd700, 0 0 20px #ffd700;
+      }
     }
     header {
       background-color: #3e2d14;
@@ -36,8 +46,12 @@
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
     }
-    .nav button:hover { background: #fff3b0; }
+    .nav button:hover { 
+      background: #fff3b0;
+      transform: scale(1.05);
+    }
     .dropdown {
       display: none;
       position: absolute;
@@ -50,6 +64,11 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       max-width: 300px;
       z-index: 10;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .show { display: block; }
     #adminIcon {
@@ -59,6 +78,11 @@
       padding: 8px 12px;
       border-radius: 6px;
       font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    #adminIcon:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px gold;
     }
     .ticker {
       background: gold;
@@ -67,6 +91,21 @@
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
+      position: relative;
+    }
+    .ticker::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, rgba(255,215,0,0.8) 0%, rgba(255,215,0,0) 50%, rgba(255,215,0,0.8) 100%);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
     .main { text-align: center; padding: 30px 10px; }
     .site-title {
@@ -74,19 +113,38 @@
       font-weight: bold;
       color: #8b4513;
       margin: 30px 0;
+      animation: pulse 3s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
     #logoImg {
       max-height: 100px;
       display: block;
       margin: 10px auto;
+      transition: all 0.5s ease;
+    }
+    #logoImg:hover {
+      transform: rotate(5deg) scale(1.1);
     }
     .slide {
       margin-bottom: 20px;
+      transition: all 0.5s ease;
+    }
+    .slide:hover {
+      transform: translateY(-5px);
     }
     .slide img {
       max-width: 90%;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.5s ease;
+    }
+    .slide img:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
     }
     .slide p {
       font-size: 1.2em;
@@ -101,6 +159,11 @@
       font-size: 0.9em;
       display: inline-block;
       margin-top: 5px;
+      transition: all 0.3s ease;
+    }
+    .read-more:hover {
+      color: #0056b3;
+      text-decoration: underline;
     }
     .send-message, .logout {
       margin: 10px;
@@ -111,12 +174,22 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    .send-message:hover, .logout:hover {
+      background: gold;
+      transform: scale(1.05);
     }
     footer {
       text-align: center;
       padding: 15px;
       background-color: #3e2d14;
       color: white;
+      animation: glowFooter 3s infinite alternate;
+    }
+    @keyframes glowFooter {
+      from { box-shadow: 0 0 5px gold; }
+      to { box-shadow: 0 0 20px gold; }
     }
     .hidden { display: none; }
     textarea, input[type="text"] {
@@ -125,6 +198,12 @@
       margin: 10px auto;
       border-radius: 8px;
       border: 1px solid #ccc;
+      transition: all 0.3s ease;
+    }
+    textarea:focus, input[type="text"]:focus {
+      border-color: gold;
+      box-shadow: 0 0 10px gold;
+      outline: none;
     }
   </style>
 </head>
@@ -145,7 +224,7 @@
     <div class="site-title">GO SMART AMERICAN ACADEMY</div>
     <div id="messageForm" class="hidden">
       <textarea id="messageInput" placeholder="اكتب رسالتك هنا..."></textarea><br>
-      <button onclick="sendMessage()">إرسال</button>
+      <button class="send-message" onclick="sendMessage()">إرسال</button>
       <p id="messageStatus"></p>
     </div>
   </div>
@@ -156,17 +235,17 @@
     <h3>لوحة تحكم الأدمن</h3>
     <input type="file" id="imageUpload" multiple><br>
     <textarea id="slideText" placeholder="اكتب النص المصاحب للصورة"></textarea><br>
-    <button onclick="addSlide()">إضافة صورة مع نص</button><br>
+    <button class="send-message" onclick="addSlide()">إضافة صورة مع نص</button><br>
     <textarea id="editAbout" placeholder="تعديل نص من نحن"></textarea><br>
-    <button onclick="updateText('about')">تحديث من نحن</button><br>
+    <button class="send-message" onclick="updateText('about')">تحديث من نحن</button><br>
     <textarea id="editContact" placeholder="تعديل نص اتصل بنا"></textarea><br>
-    <button onclick="updateText('contact')">تحديث اتصل بنا</button><br>
+    <button class="send-message" onclick="updateText('contact')">تحديث اتصل بنا</button><br>
     <textarea id="editAnnouncement" placeholder="تعديل الإعلان النصي"></textarea><br>
-    <button onclick="updateAnnouncement()">تحديث الإعلان</button><br>
+    <button class="send-message" onclick="updateAnnouncement()">تحديث الإعلان</button><br>
     <h3>شعار الموقع</h3>
     <input type="file" id="logoUpload" accept="image/*">
-    <button onclick="uploadLogo()">تحديث الشعار</button>
-    <button onclick="deleteLogo()">حذف الشعار</button><br>
+    <button class="send-message" onclick="uploadLogo()">تحديث الشعار</button>
+    <button class="send-message" onclick="deleteLogo()">حذف الشعار</button><br>
     <h3>الرسائل الواردة</h3>
     <div id="adminMessages"></div>
     <h3>المنشورات المضافة</h3>
@@ -244,7 +323,7 @@ function renderMessages(messages) {
   box.innerHTML = '';
   for (const key in messages) {
     const msg = messages[key];
-    box.innerHTML += `<p>${msg}</p><button onclick="deleteMessage('${key}')">حذف</button>`;
+    box.innerHTML += `<p>${msg}</p><button class="send-message" onclick="deleteMessage('${key}')">حذف</button>`;
   }
 }
 
@@ -276,8 +355,8 @@ function renderSlides(slides) {
       adminSlide.innerHTML = `
         <p>${slide.text}</p>
         <img src='${slide.img}' alt='صورة'><br>
-        <button onclick="editSlide('${key}', \`${slide.text.replace(/`/g, '\\`')}\`)">تعديل</button>
-        <button onclick="deleteSlide('${key}')">حذف</button>
+        <button class="send-message" onclick="editSlide('${key}', \`${slide.text.replace(/`/g, '\\`')}\`)">تعديل</button>
+        <button class="send-message" onclick="deleteSlide('${key}')">حذف</button>
       `;
       admin.appendChild(adminSlide);
     }
